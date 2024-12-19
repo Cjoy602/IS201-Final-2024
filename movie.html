@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Movie Quiz</title>
+<style>
+body {
+  font-family: sans-serif;
+  background-color: lightblue;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; 
+  margin: 0; 
+}
+
+#quiz-container {
+  border: 2px solid black;
+  padding: 20px;
+  width: 500px;
+  text-align: center;
+}
+
+.correct {
+  color: green;
+}
+
+.incorrect {
+  color: red;
+}
+</style>
+</head>
+<body>
+  <div id="quiz-container">
+    <h1>Movie Quiz</h1>
+    <p id="question"></p>
+    <div id="answers"></div>
+    <p id="result"></p>
+    <p id="score"></p>
+  </div>
+
+  <script>
+    const questionPool = [
+      { q: "What year was the movie Gone With The Wind released?", a: "1939", options: ["1939", "1942", "1950", "1937"] },
+      { q: "Who won the Academy Award for Best Actor for his role in the film There Will Be Blood?", a: "Daniel Day-Lewis", options: ["Daniel Day-Lewis", "Leonardo DiCaprio", "Brad Pitt", "Denzel Washington"] },
+      { q: "What film was released in 2021 and directed by Denis Villeneuve?", a: "Dune: Part One", options: ["Dune: Part One", "Blade Runner 2049", "Arrival", "The Martian"] },
+      { q: "What A24 film was released in 2022 and won Best Picture at the Academy Awards?", a: "Everything Everywhere All At Once", options: ["Everything Everywhere All At Once", "The Whale", "Moonlight", "Midsommar"] },
+      { q: "What is the name of the serial killer in the film The Silence of The Lambs?", a: "Buffalo Bill", options: ["Hannibal Lecter", "Buffalo Bill", "Norman Bates", "John Doe"] },
+      { q: "Which classic film ends with the line, 'Louis, I think this is the beginning of a beautiful friendship'?", a: "Casablanca", options: ["Casablanca", "Gone With the Wind", "Citizen Kane", "The Maltese Falcon"] },
+      { q: "Who directed the 2017 film Get Out?", a: "Jordan Peele", options: ["Jordan Peele", "Ari Aster", "Greta Gerwig", "James Wan"] },
+      { q: "What is the name of the fictional African country in the movie Black Panther?", a: "Wakanda", options: ["Wakanda", "Zamunda", "Genovia", "Elbonia"] },
+      { q: "What 1990 movie starred Patrick Swayze and Whoopi Goldberg?", a: "Ghost", options: ["Ghost", "Dirty Dancing", "The Bodyguard", "Point Break"] },
+      { q: "What do Katniss and Peeta attempt to poison themselves with in The Hunger Games?", a: "Nightlock", options: ["Nightlock", "Hemlock", "Belladonna", "Cyanide"] },
+      { q: "What are the names of the two main characters in La La Land?", a: "Mia and Sebastian", options: ["Mia and Sebastian", "Jack and Rose", "Harry and Sally", "Sam and Annie"] },
+      { q: "Who directed the 1994 film Pulp Fiction?", a: "Quentin Tarantino", options: ["Quentin Tarantino", "Martin Scorsese", "Steven Spielberg", "Francis Ford Coppola"] },
+      { q: "Who voiced Mushu in Mulan?", a: "Eddie Murphy", options: ["Eddie Murphy", "Robin Williams", "Chris Rock", "Jack Black"] },
+      { q: "What film won the Best Picture Oscar in 2020?", a: "Parasite", options: ["Parasite", "1917", "Joker", "Ford v Ferrari"] },
+      { q: "What gift does Rose find in her coat pocket at the end of Titanic?", a: "A necklace", options: ["A necklace", "A letter", "A ring", "A photograph"] },
+      { q: "What famous star produced Barbie?", a: "Margot Robbie", options: ["Margot Robbie", "Greta Gerwig", "Ryan Gosling", "Amy Adams"] },
+      { q: "Who is the director of Oppenheimer?", a: "Christopher Nolan", options: ["Christopher Nolan", "Denis Villeneuve", "Steven Spielberg", "James Cameron"] },
+      { q: "What is the name of the 1992 movie that features Tom Hanks, Geena Davis, and Madonna?", a: "A League of Their Own", options: ["A League of Their Own", "The Sandlot", "Field of Dreams", "Moneyball"] },
+      { q: "What breakfast food does Donkey want to make with Shrek in Shrek?", a: "Waffles", options: ["Waffles", "Pancakes", "Toast", "Eggs"] },
+      { q: "Which one of Voldemort's Horcruxes was destroyed last in Harry Potter and the Deathly Hallows — Part 2?", a: "Nagini, the snake", options: ["Nagini, the snake", "The locket", "The diadem", "The ring"] },
+      { q: "In Willy Wonka & the Chocolate Factory, who is the first kid the Oompa Loompas sing about?", a: "Augustus Gloop", options: ["Augustus Gloop", "Veruca Salt", "Mike Teavee", "Violet Beauregarde"] },
+      { q: "What color did Frenchy dye her hair in Grease?", a: "Pink", options: ["Pink", "Blue", "Green", "Purple"] },
+      { q: "Who voiced Coraline in Coraline?", a: "Dakota Fanning", options: ["Dakota Fanning", "Elle Fanning", "Chloë Grace Moretz", "Abigail Breslin"] },
+      { q: "Where do Kat and Patrick first kiss in 10 Things I Hate About You?", a: "A paintball arena", options: ["A paintball arena", "A dance", "The bleachers", "The car"] },
+      { q: "Who voiced Jessie in Toy Story 2?", a: "Joan Cusack", options: ["Joan Cusack", "Annie Potts", "Julia Louis-Dreyfus", "Maggie Smith"] },
+      { q: "In Breakfast At Tiffany's, what is the name of Holly Golightly's cat?", a: "Cat", options: ["Cat", "Whiskers", "Oliver", "Charlie"] }
+    ];
+
+    const encouragements = [
+      "Great job! Keep up the good work!",
+      "You're a movie buff in the making!",
+      "Keep challenging yourself—you’re doing amazing!",
+      "Your knowledge is impressive!",
+      "Never stop learning and having fun!"
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let answered = false; 
+    let selectedQuestions = [];
+    let usedQuestions = [];
+    
+    const quizContainer = document.getElementById('quiz-container');
+
+    function startQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      answered = false;
+
+      const availableQuestions = questionPool.filter(q => !usedQuestions.includes(q.q));
+
+      if (availableQuestions.length < 5) {
+        usedQuestions = [];
+      }
+
+      selectedQuestions = availableQuestions.sort(() => Math.random() - 0.5).slice(0, 5);
+      selectedQuestions.forEach(q => usedQuestions.push(q.q));
+
+      quizContainer.innerHTML = `
+        <h1>Movie Quiz</h1>
+        <p id="question"></p>
+        <div id="answers"></div>
+        <p id="result"></p>
+        <p id="score"></p>
+      `;
+      displayQuestion();
+    }
+
+    function displayQuestion() {
+      if (currentQuestion < selectedQuestions.length) {
+        const question = selectedQuestions[currentQuestion];
+        const questionElement = document.getElementById('question');
+        const answersElement = document.getElementById('answers');
+        const resultElement = document.getElementById('result');
+
+        questionElement.textContent = question.q;
+        answersElement.innerHTML = '';
+        resultElement.textContent = '';
+        answered = false;
+
+        // Shuffle the answer options
+        const shuffledOptions = question.options.sort(() => Math.random() - 0.5);
+
+        shuffledOptions.forEach(option => {
+          const button = document.createElement('button');
+          button.textContent = option;
+          button.addEventListener('click', () => checkAnswer(option));
+          answersElement.appendChild(button);
+        });
+      } else {
+        showScore();
+      }
+    }
+
+    function checkAnswer(selectedAnswer) {
+      if (!answered) {
+        const correctAnswer = selectedQuestions[currentQuestion].a;
+        const resultElement = document.getElementById('result');
+        const answersElement = document.getElementById('answers');
+
+        if (selectedAnswer === correctAnswer) {
+          resultElement.textContent = "Correct!";
+          resultElement.className = 'correct';
+          score++;
+        } else {
+          resultElement.textContent = `Incorrect! The correct answer was: ${correctAnswer}`;
+          resultElement.className = 'incorrect';
+        }
+
+        answered = true;
+        setTimeout(() => {
+          currentQuestion++;
+          displayQuestion();
+        }, 2000);
+      }
+    }
+
+    function showScore() {
+      quizContainer.innerHTML = `
+        <h1>Quiz Complete!</h1>
+        <p>Your score: ${score}/${selectedQuestions.length}</p>
+        <p>${encouragements[Math.floor(Math.random() * encouragements.length)]}</p>
+        <button onclick="startQuiz()">Play Again</button>
+      `;
+    }
+
+    startQuiz();
+  </script>
+</body>
+</html>
